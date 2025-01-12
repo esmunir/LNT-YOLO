@@ -110,7 +110,7 @@ python ./tensorrt-python/export.py -o lnt_yolo.pt.onnx -e lnt_yolo.pt-nms.trt -p
 
 </details>
 
-Tested with: Python 3.7.13, Pytorch 1.12.0+cu113
+Tested with: Python 3.9.19, Pytorch 2.3.1+cu121
 
 ## Citation
 
