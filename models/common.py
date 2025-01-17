@@ -59,6 +59,8 @@ class Concat(nn.Module):
         self.d = dimension
 
     def forward(self, x):
+        #print("Concat")
+        #print(torch.cat(x, self.d).shape)
         return torch.cat(x, self.d)
 
 
@@ -2017,3 +2019,81 @@ class ST2CSPC(nn.Module):
         return self.cv4(torch.cat((y1, y2), dim=1))
 
 ##### end of swin transformer v2 #####   
+########## SimAM ################
+class SimAM(torch.nn.Module):
+    def __init__(self, channels = None,out_channels = None, e_lambda = 1e-4):
+        super(SimAM, self).__init__()
+
+        self.activaton = nn.Tanh()
+        self.e_lambda = e_lambda
+
+    def __repr__(self):
+        s = self.__class__.__name__ + '('
+        s += ('lambda=%f)' % self.e_lambda)
+        return s
+
+    @staticmethod
+    def get_module_name():
+        return "simam"
+
+    def forward(self, x):
+
+        b, c, h, w = x.size()
+        
+        n = w * h - 1
+
+        d = (x - x.mean(dim=[2,3], keepdim=True)).pow(2)
+        y = d / (4 * (d.sum(dim=[2,3], keepdim=True) / n + self.e_lambda))
+        #print("SIMAM")
+        #print(x.shape)
+        #print(y.shape)
+        return y#x * self.activaton(y)
+    
+class ConvAM(nn.Module):
+    # Standard convolution
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True):  # ch_in, ch_out, kernel, stride, padding, groups
+        super(Conv, self).__init__()
+        self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
+        self.bn = nn.BatchNorm2d(c2)
+        self.act = nn.SiLU() if act is True else (act if isinstance(act, nn.Module) else nn.Identity())
+        self.att = SimAM()
+
+    def forward(self, x):
+        x = self.att(x)
+        return self.act(self.bn(self.conv(x)))
+
+    def fuseforward(self, x):
+        return self.act(self.conv(x))
+    
+# ECA
+class ECA(nn.Module):
+    """Constructs a ECA module.
+    Args:
+        channel: Number of channels of the input feature map
+        k_size: Adaptive selection of kernel size
+    """
+ 
+    def __init__(self, c1, c2, k_size=3):
+        super(ECA, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.conv = nn.Conv1d(1, 1, kernel_size=k_size, padding=(k_size - 1) // 2, bias=False)
+        self.sigmoid = nn.Sigmoid()
+ 
+    def forward(self, x):
+        # feature descriptor on the global spatial information
+        y = self.avg_pool(x)
+ 
+        # print(y.shape,y.squeeze(-1).shape,y.squeeze(-1).transpose(-1, -2).shape)
+        # Two different branches of ECA module
+        # 50*C*1*1
+        # 50*C*1
+        # 50*1*C
+        y = self.conv(y.squeeze(-1).transpose(-1, -2)).transpose(-1, -2).unsqueeze(-1)
+ 
+        # Multi-scale information fusion
+        #y = self.sigmoid(y)
+
+        #print("ECA")
+        #print(y.expand_as(x).shape)
+ 
+        return y.expand_as(x)#x * y.expand_as(x)
