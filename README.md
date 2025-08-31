@@ -115,7 +115,19 @@ Tested with: Python 3.9.19, Pytorch 2.3.1+cu121
 ## Citation
 
 ```
-
+@Article{smartcities8030095,
+AUTHOR = {Munir, Syahrul and Lin, Huei-Yung},
+TITLE = {LNT-YOLO: A Lightweight Nighttime Traffic Light Detection Model},
+JOURNAL = {Smart Cities},
+VOLUME = {8},
+YEAR = {2025},
+NUMBER = {3},
+ARTICLE-NUMBER = {95},
+URL = {https://www.mdpi.com/2624-6511/8/3/95},
+ISSN = {2624-6511},
+ABSTRACT = {Autonomous vehicles are one of the key components of smart mobility that leverage innovative technology to navigate and operate safely in urban environments. Traffic light detection systems, as a key part of autonomous vehicles, play a key role in navigation during challenging traffic scenarios. Nighttime driving poses significant challenges for autonomous vehicle navigation, particularly in regard to the accuracy of traffic lights detection (TLD) systems. Existing TLD methodologies frequently encounter difficulties under low-light conditions due to factors such as variable illumination, occlusion, and the presence of distracting light sources. Moreover, most of the recent works only focused on daytime scenarios, often overlooking the significantly increased risk and complexity associated with nighttime driving. To address these critical issues, this paper introduces a novel approach for nighttime traffic light detection using the LNT-YOLO model, which is based on the YOLOv7-tiny framework. LNT-YOLO incorporates enhancements specifically designed to improve the detection of small and poorly illuminated traffic signals. Low-level feature information is utilized to extract the small-object features that have been missing because of the structure of the pyramid structure in the YOLOv7-tiny neck component. A novel SEAM attention module is proposed to refine the features that represent both the spatial and channel information by leveraging the features from the Simple Attention Module (SimAM) and Efficient Channel Attention (ECA) mechanism. The HSM-EIoU loss function is also proposed to accurately detect a small traffic light by amplifying the loss for hard-sample objects. In response to the limited availability of datasets for nighttime traffic light detection, this paper also presents the TN-TLD dataset. This newly curated dataset comprises carefully annotated images from real-world nighttime driving scenarios, featuring both circular and arrow traffic signals. Experimental results demonstrate that the proposed model achieves high accuracy in recognizing traffic lights in the TN-TLD dataset and in the publicly available LISA dataset. The LNT-YOLO model outperforms the original YOLOv7-tiny model and other state-of-the-art object detection models in mAP performance by 13.7% to 26.2% on the TN-TLD dataset and by 9.5% to 24.5% on the LISA dataset. These results underscore the model’s feasibility and robustness compared to other state-of-the-art object detection models. The source code and dataset will be available through the GitHub repository.},
+DOI = {10.3390/smartcities8030095}
+}
 ```
 
 
