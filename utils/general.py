@@ -18,6 +18,8 @@ import torch
 import torchvision
 import yaml
 
+import pkg_resources as pkg
+
 from utils.google_utils import gsutil_getsize
 from utils.metrics import fitness
 from utils.torch_utils import init_torch_seeds
@@ -172,6 +174,16 @@ def check_dataset(dict):
             else:
                 raise Exception('Dataset not found.')
 
+def check_version(current="0.0.0", minimum="0.0.0", name="version ", pinned=False, hard=False, verbose=False):
+    """Checks if the current version meets the minimum required version, exits or warns based on parameters."""
+    current, minimum = (pkg.parse_version(x) for x in (current, minimum))
+    result = (current == minimum) if pinned else (current >= minimum)  # bool
+    s = f"WARNING ⚠️ {name}{minimum} is required by YOLOv5, but {name}{current} is currently installed"  # string
+    if hard:
+        assert result, emojis(s)  # assert min requirements met
+    #if verbose and not result:
+        #LOGGER.warning(s)
+    return result
 
 def make_divisible(x, divisor):
     # Returns x evenly divisible by divisor
@@ -341,7 +353,7 @@ def clip_coords(boxes, img_shape):
     boxes[:, 3].clamp_(0, img_shape[0])  # y2
 
 
-def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=1e-7):
+def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, EIoU=False, FocalEIoU=False, eps=1e-7):
     # Returns the IoU of box1 to box2. box1 is 4, box2 is nx4
     box2 = box2.T
 
@@ -366,10 +378,10 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
 
     iou = inter / union
 
-    if GIoU or DIoU or CIoU:
+    if GIoU or DIoU or CIoU or EIoU or FocalEIoU:
         cw = torch.max(b1_x2, b2_x2) - torch.min(b1_x1, b2_x1)  # convex (smallest enclosing box) width
         ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)  # convex height
-        if CIoU or DIoU:  # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
+        if CIoU or DIoU or EIoU or FocalEIoU:  # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
             c2 = cw ** 2 + ch ** 2 + eps  # convex diagonal squared
             rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 +
                     (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2) / 4  # center distance squared
@@ -380,6 +392,16 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
                 with torch.no_grad():
                     alpha = v / (v - iou + (1 + eps))
                 return iou - (rho2 / c2 + v * alpha)  # CIoU
+            elif EIoU or FocalEIoU:  #
+                rhoh2 = torch.pow(h2 - h1, 2)
+                rhow2 = torch.pow(w2 - w1, 2)
+                ch2 = torch.pow(ch, 2) + eps
+                cw2 = torch.pow(cw, 2) + eps
+                if EIoU:
+                    return iou - (rho2 / c2 + rhoh2 / ch2 + rhow2 / cw2)  # EIoU
+                else:
+                    Loss_EIOU = (1.0 - iou + (rho2 / c2 + rhow2 / cw2 + rhoh2 / ch2)).mean()  # EIoU
+                    return (iou ** 0.5) * Loss_EIOU
         else:  # GIoU https://arxiv.org/pdf/1902.09630.pdf
             c_area = cw * ch + eps  # convex area
             return iou - (c_area - union) / c_area  # GIoU
