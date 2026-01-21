@@ -2,7 +2,7 @@
 
 ## Description
 
-Implementation of paper - [LNT-YOLO: A Lightweight Nighttime Traffic Light Detection and Recognition Network](not yet published)
+Implementation of paper - [LNT-YOLO: A Lightweight Nighttime Traffic Light Detection and Recognition Network](https://www.mdpi.com/2624-6511/8/3/95)
 
 ## Performance 
 
