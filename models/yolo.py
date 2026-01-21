@@ -14,8 +14,8 @@ from utils.torch_utils import time_synchronized, fuse_conv_and_bn, model_info, s
     select_device, copy_attr
 from utils.loss import SigmoidBin
 
-from models.FFANet import FFA
-from models.dyhead import DyHeadBlock
+#from models.FFANet import FFA
+#from models.dyhead import DyHeadBlock
 
 try:
     import thop  # for FLOPS computation
